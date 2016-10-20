@@ -12,3 +12,4 @@ __all__.extend([
 
 from .threading import *
 from .win import *
+from .exceptions import *
