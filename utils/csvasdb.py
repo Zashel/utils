@@ -11,6 +11,8 @@ class CsvAsDb():
         self._with_headers = headers is None and False or True
         self._dir_headers = list()
         self._data = dict()
+        self._new_files = int()
+        self._active_row = None
         if not os.path.exists(self._file_path):
             os.makedirs(os.path.dirname(self._file_path))
         with open(self._file_path, "wb") as data_file:
@@ -32,7 +34,15 @@ class CsvAsDb():
         directory.extend(self._dir_headers)
         return directory
 
+    def __getattr__(self, item):
+        if item in self._dir_headers and self._active_row is not None:
+            return self._data[self._dir_items.index(item)]
+        else:
+            raise AttributeError()
+
     def _set_index(self, field, data, index):
+        """Includes a field/value index.
+        To not to be repeated"""
         if field not in self._indexes:
             self._indexes[field] = dict()
         if self._data[field] not in self._indexes[field]:
@@ -44,6 +54,39 @@ class CsvAsDb():
         if field in self._index:
             self._index.remove(field)
             del(self._indexes[field])
+
+    def del_row(self, index=None):
+        """Delete a row with a given index or the active one if not indicated"""
+        if index is None:
+            index = self._active_row
+            self._active_row = None
+        for head in self._index:
+            self.indexes[head][self._data[index][head]].remove(index)
+            if self.indexes[head][self._data[index][head]] == list():
+                del(self.indexes[head][self._data[index][head]])
+        del[self._data[index]]
+
+    def insert_row(self, row):
+        """Inserts data given a specific dictionary.
+        Headers not coincident will be ignored"""
+        index = "N{}".format(str(self._new_files))
+        self._new_files += 1
+        data = dict()
+        for field in self._headers:
+            try:
+                data[field] = row[field]
+            except KeyError:
+                data[field] = str()
+            if field in self._index:
+                self._set_index(field, data[field], index)
+        self._data[index] = data
+
+    def set_active(self, index):
+        """Activates a specific row"""
+        if index in self._data:
+            self._active_row = index
+        else:
+            raise IndexError()
 
     def set_index(self, field):
         """Sets new index. Slow, slow."""
