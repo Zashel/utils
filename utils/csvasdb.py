@@ -1,5 +1,8 @@
 from collections import UserDict
 import os
+#TODO Searches
+#TODO Filters
+#TODO Iters
 
 class CsvAsDb():
     """Uses a CSV file as a DataBase"""
@@ -8,15 +11,15 @@ class CsvAsDb():
         self._file_path = file_path
         self._separator = separator
         self._headers = headers
-        self._with_headers = headers is None and False or True
+        self._with_headers = headers is not None
         self._dir_headers = list()
         self._data = dict()
         self._new_files = int()
         self._active_row = None
         if not os.path.exists(self._file_path):
             os.makedirs(os.path.dirname(self._file_path))
-        with open(self._file_path, "wb") as data_file:
-            pass #A weird but valid way to create a file
+            with open(self._file_path, "wb") as data_file:
+                pass #A weird but valid way to create a file
         self._index = index
         self._indexes = dict()
         head, tail = os.path.split(os.path.basename(self._file_path))
@@ -25,7 +28,7 @@ class CsvAsDb():
             if not os.path.exists(self._index_file):
                 with open(self._file_path, "wb") as index_file:
                     pass #Again
-            with open(self._file_path, "wb") as index_file:
+            with open(self._file_path, "r") as index_file:
                 self._index = [index.strip("\n").strip("\r") for index in index_file]
         self.read()
 
@@ -36,16 +39,23 @@ class CsvAsDb():
 
     def __getattr__(self, item):
         if item in self._dir_headers and self._active_row is not None:
-            return self._data[self._dir_items.index(item)]
+            return self._data[self._active_row][self._headers[self._dir_headers.index(item)]]
         else:
             raise AttributeError()
+
+    def __getitem__(self, item):
+        if item in self._data:
+            self.set_index(item)
+            return self
+        else:
+            KeyError
 
     def _set_index(self, field, data, index):
         """Includes a field/value index.
         To not to be repeated"""
         if field not in self._indexes:
             self._indexes[field] = dict()
-        if self._data[field] not in self._indexes[field]:
+        if data not in self._indexes[field]:
             self._indexes[field][data] = list()
         self._indexes[field][data].append(index)
 
@@ -97,18 +107,18 @@ class CsvAsDb():
 
     def read(self):
         """Read the associated file and creates the dictionary"""
-        with open(self._file_path, "rb") as data_file:
-            for index, row in data_file:
+        with open(self._file_path, "r") as data_file:
+            for index, row in enumerate(data_file):
                 row = row.strip("\n").strip("\r").split(self._separator)
-                if index == 0 and self._with_headers is False:
+                if index == 0 and self._headers is None:
                     self._headers = row
                     self._dir_headers = [head.replace(" ", "_") for head in self._headers]
                 else:
                     data = {}
-                    for field, head in self._headers:
-                        data[head] = row[field]
-                        if head in self._index:
-                            self._set_index(head, row[field], index)
+                    for field_index, field in enumerate(self._headers):
+                        data[field] = row[field_index]
+                        if field in self._index:
+                            self._set_index(field, row[field_index], index)
                     self._data[index] = data
 
     def write(self, headers=None):
