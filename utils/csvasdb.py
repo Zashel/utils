@@ -32,6 +32,26 @@ class CsvAsDb():
         directory.extend(self._dir_headers)
         return directory
 
+    def _set_index(self, field, data, index):
+        if field not in self._indexes:
+            self._indexes[field] = dict()
+        if self._data[field] not in self._indexes[field]:
+            self._indexes[field][data] = list()
+        self._indexes[field][data].append(index)
+
+    def del_index(self, field):
+        """Delete an index. Why should you?"""
+        if field in self._index:
+            self._index.remove(field)
+            del(self._indexes[field])
+
+    def set_index(self, field):
+        """Sets new index. Slow, slow."""
+        if field in self._headers and field not in self._index:
+            self._index.append(field)
+            for index in self._data:
+                self._set_index(field, self._data[index][field], index)
+
     def read(self):
         """Read the associated file and creates the dictionary"""
         with open(self._file_path, "rb") as data_file:
@@ -45,9 +65,7 @@ class CsvAsDb():
                     for field, head in self._headers:
                         data[head] = row[field]
                         if head in self._index:
-                            if head not in self._indexes:
-                                self._indexes[head] = dict()
-                            self._indexes[head][row[field]] = index
+                            self._set_index(head, row[field], index)
                     self._data[index] = data
 
     def write(self, headers=None):
