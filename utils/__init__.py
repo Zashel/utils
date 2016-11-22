@@ -2,13 +2,13 @@
 __all__ = [
         "search_win_drive",
         "threadize",
-        "daemonize"
+        "daemonize",
+        "CsvAsDb"
         ]
 
 #Exceptions:
 __all__.extend([
-        "PathError",
-        "CsvAsDb"
+        "PathError"
         ])
 
 from .threading import *

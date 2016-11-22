@@ -2,7 +2,8 @@
 __all__ = [
         "search_win_drive",
         "threadize",
-        "daemonize"
+        "daemonize",
+        "CsvAsDb"
         ]
 
 #Exceptions:
@@ -13,6 +14,7 @@ __all__.extend([
 from .utils.exceptions import *
 from .utils.threading import *
 from .utils.win import *
+from .utils.csvasdb import *
 
 '''
 from .utils import PathError
