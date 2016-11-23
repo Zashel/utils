@@ -3,7 +3,8 @@ __all__ = [
         "search_win_drive",
         "threadize",
         "daemonize",
-        "CsvAsDb"
+        "CsvAsDb",
+        "AttributedDict"
         ]
 
 #Exceptions:
@@ -15,6 +16,7 @@ from .utils.exceptions import *
 from .utils.threading import *
 from .utils.win import *
 from .utils.csvasdb import *
+from .utils.custombase import *
 
 '''
 from .utils import PathError

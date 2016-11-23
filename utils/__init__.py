@@ -3,7 +3,8 @@ __all__ = [
         "search_win_drive",
         "threadize",
         "daemonize",
-        "CsvAsDb"
+        "CsvAsDb",
+        "AttributedDict"
         ]
 
 #Exceptions:
@@ -15,3 +16,4 @@ from .threading import *
 from .win import *
 from .exceptions import *
 from .csvasdb import *
+from .custombase import *

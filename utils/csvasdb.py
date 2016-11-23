@@ -1,8 +1,12 @@
 from collections import UserDict
 import os
+from .custombase import AttributedDict
 #TODO Searches
 #TODO Filters
 #TODO Iters
+
+class RowError(Exception):
+    pass
 
 class CsvAsDb():
     """Uses a CSV file as a DataBase"""
@@ -13,16 +17,19 @@ class CsvAsDb():
         self._headers = headers
         self._with_headers = headers is not None
         self._dir_headers = list()
-        self._data = dict()
+        self._data = AttributedDict()
         self._new_files = int()
         self._active_row = None
         if not os.path.exists(self._file_path):
-            os.makedirs(os.path.dirname(self._file_path))
+            try:
+                os.makedirs(os.path.dirname(self._file_path))
+            except FileExistsError:
+                pass
             with open(self._file_path, "wb") as data_file:
                 pass #A weird but valid way to create a file
         self._index = index
-        self._indexes = dict()
-        head, tail = os.path.split(os.path.basename(self._file_path))
+        self._indexes = AttributedDict()
+        head, ext = os.path.splitext(os.path.basename(self._file_path))
         self._index_file = os.path.join(os.path.dirname(self._file_path), "{}.index".format(head))
         if self._index is list():
             if not os.path.exists(self._index_file):
@@ -45,16 +52,16 @@ class CsvAsDb():
 
     def __getitem__(self, item):
         if item in self._data:
-            self.set_index(item)
-            return self
+            self.set_active(item)
+            return self._data[item]
         else:
-            KeyError
+            raise KeyError()
 
     def _set_index(self, field, data, index):
         """Includes a field/value index.
         To not to be repeated"""
         if field not in self._indexes:
-            self._indexes[field] = dict()
+            self._indexes[field] = AttributedDict()
         if data not in self._indexes[field]:
             self._indexes[field][data] = list()
         self._indexes[field][data].append(index)
@@ -81,7 +88,7 @@ class CsvAsDb():
         Headers not coincident will be ignored"""
         index = "N{}".format(str(self._new_files))
         self._new_files += 1
-        data = dict()
+        data = AttributedDict()
         for field in self._headers:
             try:
                 data[field] = row[field]
@@ -127,11 +134,15 @@ class CsvAsDb():
         order = [key for key in self._data]
         order.sort()
         final_data = str()
+        print(self._with_headers)
         if (headers is None and self._with_headers is True) or headers is True:
             final_data = self._separator.join(self._headers)
-        final_data = "".join([final_data, "\n".join([self.separator.join(self._data[ord]) for ord in order])])
+        final_data = "".join(
+                    [final_data, "\n".join(
+                    [self._separator.join([self._data[ord][head] for head in self._headers]) for ord in order]
+                    )])
         final_index = "\n".join(self._index)
         with open(self._file_path, "wb") as data_file:
-            data_file.write(final_data)
+            data_file.write(bytearray(final_data, "utf-8"))
         with open(self._index_file, "wb") as index_file:
-            index_file.write(final_index)
+            index_file.write(bytearray(final_index, "utf-8"))
