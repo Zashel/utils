@@ -8,6 +8,12 @@ from .custombase import AttributedDict
 class RowError(Exception):
     pass
 
+class Method():
+    EQUALS = 0
+    LIKE = 1
+    NOT_EQUALS = 10
+    NOT_LIKE = 11
+
 class CsvAsDb():
     """Uses a CSV file as a DataBase"""
     def __init__(self, file_path, *, separator="\t", headers=None, index=list()):
@@ -15,11 +21,12 @@ class CsvAsDb():
         self._file_path = file_path
         self._separator = separator
         self._headers = headers
-        self._with_headers = headers is not None
+        self._with_headers = headers is None
         self._dir_headers = list()
         self._data = AttributedDict()
         self._new_files = int()
         self._active_row = None
+        self._filtered = list()
         if not os.path.exists(self._file_path):
             try:
                 os.makedirs(os.path.dirname(self._file_path))
@@ -39,17 +46,6 @@ class CsvAsDb():
                 self._index = [index.strip("\n").strip("\r") for index in index_file]
         self.read()
 
-    def __dir__(self):
-        directory = dir(super())
-        directory.extend(self._dir_headers)
-        return directory
-
-    def __getattr__(self, item):
-        if item in self._dir_headers and self._active_row is not None:
-            return self._data[self._active_row][self._headers[self._dir_headers.index(item)]]
-        else:
-            raise AttributeError()
-
     def __getitem__(self, item):
         if item in self._data:
             self.set_active(item)
@@ -65,6 +61,9 @@ class CsvAsDb():
         if data not in self._indexes[field]:
             self._indexes[field][data] = list()
         self._indexes[field][data].append(index)
+
+    def del_filter(self):
+        self._filter = set([key for key in self._data])
 
     def del_index(self, field):
         """Delete an index. Why should you?"""
@@ -83,6 +82,12 @@ class CsvAsDb():
                 del(self.indexes[head][self._data[index][head]])
         del[self._data[index]]
 
+    def filter(self, field, value, method=Method.EQUALS): #Think it better
+        if field in self._index:
+            if method == Method.EQUALS:
+                self._filter = self._filter | self._indexes[field][value]
+            elif method == Method.NOT_EQUALS:
+                pass
     def insert_row(self, row):
         """Inserts data given a specific dictionary.
         Headers not coincident will be ignored"""
@@ -113,33 +118,36 @@ class CsvAsDb():
             for index in self._data:
                 self._set_index(field, self._data[index][field], index)
 
+    def new_filter(self):
+        self._filter = set()
+
     def read(self):
         """Read the associated file and creates the dictionary"""
-        with open(self._file_path, "r") as data_file:
+        with open(self._file_path, "rb") as data_file:
             for index, row in enumerate(data_file):
-                row = row.strip("\n").strip("\r").split(self._separator)
+                row = row.decode("utf-8").strip("\n").strip("\r").split(self._separator)
                 if index == 0 and self._headers is None:
                     self._headers = row
                     self._dir_headers = [head.replace(" ", "_") for head in self._headers]
                 else:
-                    data = {}
+                    data = AttributedDict()
                     for field_index, field in enumerate(self._headers):
                         data[field] = row[field_index]
                         if field in self._index:
                             self._set_index(field, row[field_index], index)
                     self._data[str(index)] = data #Change to str to be able to be ordered
+        self.del_filter()
 
     def write(self, headers=None):
         """Writes the data to associated file and associated indexes"""
         order = [key for key in self._data]
         order.sort()
         final_data = str()
-        print(self._with_headers)
         if (headers is None and self._with_headers is True) or headers is True:
             final_data = self._separator.join(self._headers)
-        final_data = "".join(
+        final_data = "\n".join(
                     [final_data, "\n".join(
-                    [self._separator.join([self._data[ord][head] for head in self._headers]) for ord in order]
+                    [self._separator.join([str(self._data[ord][head]) for head in self._headers]) for ord in order]
                     )])
         final_index = "\n".join(self._index)
         with open(self._file_path, "wb") as data_file:
