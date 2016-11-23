@@ -1,9 +1,6 @@
 from collections import UserDict
 import os
 from .custombase import AttributedDict
-#TODO Searches
-#TODO Filters
-#TODO Iters
 
 class RowError(Exception):
     pass
@@ -49,6 +46,18 @@ class CsvAsDb():
             with open(self._file_path, "r") as index_file:
                 self._index = [index.strip("\n").strip("\r") for index in index_file]
         self.read()
+        
+    def __iter__(self):
+        self._iter_index = int()
+        return self
+    
+    def __next__(self):
+        index = self._iter_index
+        self._iter_index += 1
+        if index < len(self._filter):
+            return self._data[self._filter[index]]
+        else:
+            raise StopIteration
 
     def __getitem__(self, item):
         if item in self._data:
@@ -87,6 +96,7 @@ class CsvAsDb():
         del[self._data[index]]
 
     def filter(self, field, value, method=Method.EQUALS, union=Union.AND):
+        """Adds a Filter for a given field and value"""
         if field in self._index:
             if method == Method.EQUALS:
                 if union == Union.AND:
@@ -132,6 +142,12 @@ class CsvAsDb():
                 self._set_index(field, data[field], index)
         self._data[index] = data
         return index #Let's give the index of that new row
+    
+    def search(self, field, value, method=Method.EQUALS): #It's actually s filter
+        """Searches a value in a given field and filters it"""
+        self.new_filter()
+        self.filter(field, value, method)
+        return self.__iter__()
 
     def set_active(self, index):
         """Activates a specific row"""
