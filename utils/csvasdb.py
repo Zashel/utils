@@ -13,6 +13,10 @@ class Method():
     LIKE = 1
     NOT_EQUALS = 10
     NOT_LIKE = 11
+    
+class Union():
+    AND = 0
+    OR = 1
 
 class CsvAsDb():
     """Uses a CSV file as a DataBase"""
@@ -82,12 +86,37 @@ class CsvAsDb():
                 del(self.indexes[head][self._data[index][head]])
         del[self._data[index]]
 
-    def filter(self, field, value, method=Method.EQUALS): #Think it better
+    def filter(self, field, value, method=Method.EQUALS, union=Union.AND):
         if field in self._index:
             if method == Method.EQUALS:
-                self._filter = self._filter | self._indexes[field][value]
+                if union == Union.AND:
+                    self._filter = self._filter & self._indexes[field][value]
+                elif union == Union.OR:
+                    self._filter = self._filter | self._indexes[field][value]
             elif method == Method.NOT_EQUALS:
-                pass
+                if union == Union.AND:
+                    self._filter = self._filter - self._ self._indexes[field][value]
+                elif union == Union.OR:
+                    self._filter = self._filter | set([key for key in self._data]) - self._indexes[field][value]
+            elif method == Method.LIKE:
+                data = set()
+                for index in self._ self._indexes[field]:
+                    if str(value) in str(index):
+                        data = data | self._indexes[field][index]
+                if union == Union.AND:
+                    self._filter = self._filter & data
+                elif union == Union.OR:
+                    self._filter = self._filter | data
+            elif method == Method.NOT_LIKE:
+                data = set()
+                for index in self._ self._indexes[field]:
+                    if str(value) in str(index):
+                        data = data | self._indexes[field][index]
+                if union == Union.AND:
+                    self._filter = self._filter - data
+                elif union == Union.OR:
+                    self._filter = self._filter | set([key for key in self._data]) - data
+            
     def insert_row(self, row):
         """Inserts data given a specific dictionary.
         Headers not coincident will be ignored"""
