@@ -90,6 +90,7 @@ class CsvAsDb():
             if field in self._index:
                 self._set_index(field, data[field], index)
         self._data[index] = data
+        return index #Let's give the index of that new row
 
     def set_active(self, index):
         """Activates a specific row"""
@@ -119,7 +120,7 @@ class CsvAsDb():
                         data[field] = row[field_index]
                         if field in self._index:
                             self._set_index(field, row[field_index], index)
-                    self._data[index] = data
+                    self._data[str(index)] = data #Change to str to be able to be ordered
 
     def write(self, headers=None):
         """Writes the data to associated file and associated indexes"""
