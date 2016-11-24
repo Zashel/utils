@@ -17,7 +17,7 @@ class Union():
 
 class CsvAsDb():
     """Uses a CSV file as a DataBase"""
-    def __init__(self, file_path, *, separator="\t", headers=None, index=list()):
+    def __init__(self, file_path, *, separator="\t", headers=None, index=list(), encoding="utf-8"):
         """Initializes the Dictionary"""
         self._file_path = file_path
         self._separator = separator
@@ -28,6 +28,7 @@ class CsvAsDb():
         self._new_files = int()
         self._active_row = None
         self._filtered = list()
+        self._encoding = encoding
         if not os.path.exists(self._file_path):
             try:
                 os.makedirs(os.path.dirname(self._file_path))
@@ -49,22 +50,39 @@ class CsvAsDb():
         
     def __iter__(self):
         self._iter_index = int()
+        self._filter = list(self._filter)
+        self._filter.sort()
         return self
+
+    def __len__(self):
+        return len(self._filter)
     
     def __next__(self):
         index = self._iter_index
         self._iter_index += 1
         if index < len(self._filter):
-            return self._data[self._filter[index]]
+            return self[self._filter[index]]
         else:
             raise StopIteration
 
     def __getitem__(self, item):
-        if item in self._data:
-            self.set_active(item)
-            return self._data[item]
-        else:
-            raise KeyError()
+        is_new = False #False
+        item = str(item)
+        if "N" in item:
+            item = item.replace("N", "")
+            is_new = True #True
+        if len(str(item)) < 10:
+            n = is_new is True and "N" or ""
+            item = "".join([n, "0"*((is_new is True and 9 or 10)-len(str(item))), str(item)])
+        try:
+            if item in self._data:
+                self.set_active(item)
+                return self._data[item]
+            else:
+                raise KeyError("Key: {}".format(item))
+        except TypeError:
+            print("Item: {}".format(item))
+            raise
 
     def _set_index(self, field, data, index):
         """Includes a field/value index.
@@ -97,31 +115,32 @@ class CsvAsDb():
 
     def filter(self, field, value, method=Method.EQUALS, union=Union.AND):
         """Adds a Filter for a given field and value"""
+        self._filter = set(self._filter)
         if field in self._index:
             if method == Method.EQUALS:
                 if union == Union.AND:
-                    self._filter = self._filter & self._indexes[field][value]
+                    self._filter = self._filter & set(self._indexes[field][value])
                 elif union == Union.OR:
-                    self._filter = self._filter | self._indexes[field][value]
+                    self._filter = self._filter | set(self._indexes[field][value])
             elif method == Method.NOT_EQUALS:
                 if union == Union.AND:
-                    self._filter = self._filter - self._ self._indexes[field][value]
+                    self._filter = self._filter - set(self._indexes[field][value])
                 elif union == Union.OR:
-                    self._filter = self._filter | set([key for key in self._data]) - self._indexes[field][value]
+                    self._filter = self._filter | set([key for key in self._data]) - set(self._indexes[field][value])
             elif method == Method.LIKE:
                 data = set()
-                for index in self._ self._indexes[field]:
+                for index in self._indexes[field]:
                     if str(value) in str(index):
-                        data = data | self._indexes[field][index]
+                        data = data | set(self._indexes[field][index])
                 if union == Union.AND:
                     self._filter = self._filter & data
                 elif union == Union.OR:
                     self._filter = self._filter | data
             elif method == Method.NOT_LIKE:
                 data = set()
-                for index in self._ self._indexes[field]:
+                for index in self._indexes[field]:
                     if str(value) in str(index):
-                        data = data | self._indexes[field][index]
+                        data = data | set(self._indexes[field][index])
                 if union == Union.AND:
                     self._filter = self._filter - data
                 elif union == Union.OR:
@@ -130,7 +149,7 @@ class CsvAsDb():
     def insert_row(self, row):
         """Inserts data given a specific dictionary.
         Headers not coincident will be ignored"""
-        index = "N{}".format(str(self._new_files))
+        index = "N{}{}".format("0"+(9-len(str(self._new_files)), str(self._new_files)))
         self._new_files += 1
         data = AttributedDict()
         for field in self._headers:
@@ -146,7 +165,7 @@ class CsvAsDb():
     def search(self, field, value, method=Method.EQUALS): #It's actually s filter
         """Searches a value in a given field and filters it"""
         self.new_filter()
-        self.filter(field, value, method)
+        self.filter(field, value, method, Union.OR)
         return self.__iter__()
 
     def set_active(self, index):
@@ -170,7 +189,7 @@ class CsvAsDb():
         """Read the associated file and creates the dictionary"""
         with open(self._file_path, "rb") as data_file:
             for index, row in enumerate(data_file):
-                row = row.decode("utf-8").strip("\n").strip("\r").split(self._separator)
+                row = row.decode(self._encoding).strip("\n").strip("\r").split(self._separator)
                 if index == 0 and self._headers is None:
                     self._headers = row
                     self._dir_headers = [head.replace(" ", "_") for head in self._headers]
@@ -180,7 +199,8 @@ class CsvAsDb():
                         data[field] = row[field_index]
                         if field in self._index:
                             self._set_index(field, row[field_index], index)
-                    self._data[str(index)] = data #Change to str to be able to be ordered
+                    self._data["{}{}".format("0"*(10-len(str(index))), str(index))] = data
+                    #Change to str to be able to be ordered
         self.del_filter()
 
     def write(self, headers=None):
@@ -196,6 +216,6 @@ class CsvAsDb():
                     )])
         final_index = "\n".join(self._index)
         with open(self._file_path, "wb") as data_file:
-            data_file.write(bytearray(final_data, "utf-8"))
+            data_file.write(bytearray(final_data, self._encoding))
         with open(self._index_file, "wb") as index_file:
             index_file.write(bytearray(final_index, "utf-8"))
