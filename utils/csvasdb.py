@@ -1,5 +1,5 @@
-from collections import UserDict
 import os
+import platform
 from .custombase import AttributedDict
 
 class RowError(Exception):
@@ -15,9 +15,16 @@ class Union():
     AND = 0
     OR = 1
 
+class Encoding():
+    UTF8 = "utf-8"
+    ANSI_LATIN = "cp1252"
+
+SYSTEM = platform.system()
+DEFAULT_ENCODING = SYSTEM=="Windows" and Encoding.ANSI_LATIN or Encoding.UTF8
+
 class CsvAsDb():
     """Uses a CSV file as a DataBase"""
-    def __init__(self, file_path, *, separator="\t", headers=None, index=list(), encoding="utf-8"):
+    def __init__(self, file_path, *, separator="\t", headers=None, index=list(), encoding=DEFAULT_ENCODING):
         """Initializes the Dictionary"""
         self._file_path = file_path
         self._separator = separator
@@ -33,6 +40,8 @@ class CsvAsDb():
             try:
                 os.makedirs(os.path.dirname(self._file_path))
             except FileExistsError:
+                pass
+            except FileNotFoundError:
                 pass
             with open(self._file_path, "wb") as data_file:
                 pass #A weird but valid way to create a file
@@ -149,7 +158,7 @@ class CsvAsDb():
     def insert_row(self, row):
         """Inserts data given a specific dictionary.
         Headers not coincident will be ignored"""
-        index = "N{}{}".format("0"+(9-len(str(self._new_files)), str(self._new_files)))
+        index = "N{}{}".format("0"*int(9-len(str(self._new_files))), str(self._new_files))
         self._new_files += 1
         data = AttributedDict()
         for field in self._headers:
