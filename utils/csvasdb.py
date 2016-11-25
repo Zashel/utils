@@ -219,3 +219,10 @@ class CsvAsDb():
             data_file.write(bytearray(final_data, self._encoding))
         with open(self._index_file, "wb") as index_file:
             index_file.write(bytearray(final_index, "utf-8"))
+
+    def write_to(self, new_path, headers=None):
+        """Writes data to given path"""
+        if not os.path.exists(os.path.dirname(new_path)):
+            os.makedirs(os.path.dirname(new_path))
+        self._file_path = new_path
+        self.write(headers)
