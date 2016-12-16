@@ -36,6 +36,8 @@ class CsvAsDb():
         self._active_row = None
         self._filtered = list()
         self._encoding = encoding
+        self._sort_field = "rowid"
+        self._sorting = "Asc"
         if not os.path.exists(self._file_path):
             try:
                 os.makedirs(os.path.dirname(self._file_path))
@@ -60,15 +62,14 @@ class CsvAsDb():
     def __iter__(self):
         self._iter_index = int()
         self._filter = list(self._filter)
-        self._filter.sort()
+        self.sort()
         return self
 
     def __len__(self):
         return len(self._filter)
     
     def __next__(self):
-        index = self._iter_index
-        self._iter_index += 1
+        index, self._iter_index = self._iter_index, self._iter_index+1
         if index < len(self._filter):
             return self[self._filter[index]]
         else:
@@ -190,6 +191,22 @@ class CsvAsDb():
             self._index.append(field)
             for index in self._data:
                 self._set_index(field, self._data[index][field], index)
+
+    def set_sort(self, field, sorting = "Asc"):
+        self._sort_field = field
+        self._sorting = sorting
+
+    def sort(self):
+        if self._sort_field in self._index:
+            sort_list = [key for key in self._indexes[self._sort_field]]
+            sort_list.sort(reverse=self._sorting=="Desc")
+            final = list()
+            for item in sort_list:
+                [final.append(cust_id) for cust_id in self._indexes[self._sort_field][item]
+                 if cust_id in self._filter]
+            self._filter = final
+        elif self._sort_field=="rowid":
+            self._sort_field.sort(reverse=self._sorting=="Desc")
 
     def new_filter(self):
         self._filter = set()
