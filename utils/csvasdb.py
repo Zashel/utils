@@ -61,7 +61,9 @@ class CsvAsDb():
         
     def __iter__(self):
         self._iter_index = int()
+        print(self._filter)
         self._filter = list(self._filter)
+        print(self._filter)
         self.sort()
         return self
 
@@ -71,7 +73,8 @@ class CsvAsDb():
     def __next__(self):
         index, self._iter_index = self._iter_index, self._iter_index+1
         if index < len(self._filter):
-            return self[self._filter[index]]
+            #return self[self._filter[index]]
+            return self._filter[index]
         else:
             raise StopIteration
 
@@ -197,16 +200,23 @@ class CsvAsDb():
         self._sorting = sorting
 
     def sort(self):
+        print("filter: {}".format(self._filter))
+        final = list()
         if self._sort_field in self._index:
             sort_list = [key for key in self._indexes[self._sort_field]]
             sort_list.sort(reverse=self._sorting=="Desc")
             final = list()
             for item in sort_list:
+                print(self._indexes[self._sort_field][item])
                 [final.append(cust_id) for cust_id in self._indexes[self._sort_field][item]
                  if cust_id in self._filter]
-            self._filter = final
+            print(sort_list)
         elif self._sort_field=="rowid":
-            self._sort_field.sort(reverse=self._sorting=="Desc")
+            sort_list = [key for key in self._filter]
+            sort_list.sort(reverse=self._sorting=="Desc")
+            for item in sort_list:
+                final.append(item)
+        self._filter = final
 
     def new_filter(self):
         self._filter = set()
@@ -221,11 +231,12 @@ class CsvAsDb():
                     self._dir_headers = [head.replace(" ", "_") for head in self._headers]
                 else:
                     data = AttributedDict()
+                    index = "{}{}".format("0"*(10-len(str(index))),str(index))
                     for field_index, field in enumerate(self._headers):
                         data[field] = row[field_index]
                         if field in self._index:
                             self._set_index(field, row[field_index], index)
-                    self._data["{}{}".format("0"*(10-len(str(index))), str(index))] = data
+                    self._data[index] = data
                     #Change to str to be able to be ordered
         self.del_filter()
 
