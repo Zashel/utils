@@ -97,6 +97,10 @@ class CsvAsDb():
             print("Item: {}".format(item))
             raise
 
+    def __setitem__ (self, key, value):
+        if self._active_row is not None:
+            self._data[self._active_row][key] = value
+
     def _set_index(self, field, data, index):
         """Includes a field/value index.
         To not to be repeated"""
@@ -256,6 +260,7 @@ class CsvAsDb():
             data_file.write(bytearray(final_data, self._encoding))
         with open(self._index_file, "wb") as index_file:
             index_file.write(bytearray(final_index, "utf-8"))
+        print("Saved in {}".format(self._file_path))
 
     def write_to(self, new_path, headers=None):
         """Writes data to given path"""
