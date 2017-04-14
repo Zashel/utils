@@ -4,7 +4,8 @@ __all__ = [
         "threadize",
         "daemonize",
         "CsvAsDb",
-        "AttributedDict"
+        "AttributedDict",
+        "log"
         ]
 
 #Exceptions:
@@ -17,3 +18,4 @@ from .win import *
 from .exceptions import *
 from .csvasdb import *
 from .custombase import *
+from .logger import log

@@ -19,6 +19,8 @@ def threadize(function):
                 function(*args, **kwargs)
         t = ThreadDeco()
         t.start()
+        t.__class__ = Thread
+        t.__name__ = function.__name__
         return t
     return inner
 
@@ -32,7 +34,6 @@ def daemonize(function):
     :param function: Function to run in a different thread
     :return: Thread to be joined
 
-
     '''
     @wraps(function)
     def inner(*args, **kwargs):
@@ -42,6 +43,8 @@ def daemonize(function):
         t = DaemonDeco()
         t.setDaemon(True)
         t.start()
+        t.__class__ = Thread
+        t.__name__ = function.__name__
         return t
     return inner
 
@@ -57,10 +60,13 @@ def asynchronic(function):
     """
     @threadize
     def in_thread(pipeout, *args, **kwargs):
-        pipeout.send(function(*args, **kwargs))
+        data = function(*args, **kwargs)
+        pipeout.send(data)
+    @wraps(function)
     def inner(*args, **kwargs):
-        pipein, pipeout = Pipe(False)
+        pipein, pipeout = Pipe()
         in_thread(pipeout, *args, **kwargs)
+        pipein.__name__ = function.__name__
         return pipein
     return inner
 

@@ -4,7 +4,8 @@ __all__ = [
         "threadize",
         "daemonize",
         "CsvAsDb",
-        "AttributedDict"
+        "AttributedDict",
+        "log"
         ]
 
 #Exceptions:
@@ -17,6 +18,7 @@ from .utils.threading import *
 from .utils.win import *
 from .utils.csvasdb import *
 from .utils.custombase import *
+from .utils.logger import *
 
 '''
 from .utils import PathError
