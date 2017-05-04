@@ -18,7 +18,7 @@ def search_win_drive(path):
         if os.path.exists(full_path):
             return full_path
     else:
-        raise PathError 
+        raise FileNotFoundError
 
 #For compatibilities with other modules and stuff of my own:
 buscar_unidad = search_win_drive
