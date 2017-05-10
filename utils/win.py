@@ -1,6 +1,5 @@
 import os
-from .exceptions import PathError
-
+import win32clipboard as clipboard
 #Not sure I wrote this code. 
 #I suppose I didn't, but found it as tutorials.
 #If this is yours, please, tell me.
@@ -22,3 +21,27 @@ def search_win_drive(path):
 
 #For compatibilities with other modules and stuff of my own:
 buscar_unidad = search_win_drive
+
+def copy(item):
+    """
+    Copies item to windows clipboard
+
+    :param item: item to copy to
+    :return: None
+    """
+    clipboard.OpenClipboard()
+    clipboard.EmptyClipboard()
+    clipboard.SetClipboardData(str(item))
+    clipboard.CloseClipboard()
+
+
+def paste():
+    """
+    Pastes item form windows clipboard
+
+    :return: Contents from clipboard
+    """
+    clipboard.OpenClipboard()
+    data = clipboard.GetClipboardData()
+    clipboard.CloseClipboard()
+    return data
