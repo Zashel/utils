@@ -5,7 +5,9 @@ __all__ = [
         "daemonize",
         "CsvAsDb",
         "AttributedDict",
-        "log"
+        "log",
+        "copy",
+        "paste"
         ]
 
 #Exceptions:
