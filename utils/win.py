@@ -31,7 +31,7 @@ def copy(item):
     """
     clipboard.OpenClipboard()
     clipboard.EmptyClipboard()
-    clipboard.SetClipboardData(str(item))
+    clipboard.SetClipboardText(str(item))
     clipboard.CloseClipboard()
 
 
