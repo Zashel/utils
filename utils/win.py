@@ -1,8 +1,5 @@
 import os
 import win32clipboard as clipboard
-#Not sure I wrote this code. 
-#I suppose I didn't, but found it as tutorials.
-#If this is yours, please, tell me.
 
 def search_win_drive(path):
     '''
