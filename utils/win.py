@@ -64,6 +64,13 @@ def search_win_drive(path):
 #For compatibilities with other modules and stuff of my own:
 buscar_unidad = search_win_drive
 
+def format_sylk(data):
+    if isinstance(data, datetime.datetime):
+        data = data.strftime("%d/%m/%Y %H:%M:%S")
+    if isinstance(data, str):
+        data = "\"" + data + "\""
+    return str(data)
+
 def copy(item):
     """
     Copies item to windows clipboard
@@ -85,12 +92,6 @@ def copy(item):
             return "\r\n".join(final)
         def set_sylk(item):
             final = list()
-            def format_sylk(data):
-                if isinstance(data, datetime.datetime):
-                    data = data.strftime("%d/%m/%Y %H:%M:%S")
-                if isinstance(data, str):
-                    data = "\""+data+"\""
-                return str(data)
             row_index = 1
             for row in item:
                 if any([isinstance(row, typo) for typo in (list, tuple)]):
@@ -123,6 +124,8 @@ def copy(item):
                                                 isinstance(i, dict) and set_headers(i) or
                                                 str(i) for i in item]))
     else:
+        clipboard.SetClipboardData(clipboard.CF_SYLK,
+                                   bytearray(SYLK_TEMPLATE.format("C"+coordinates(1, 1)+";K"+format_sylk(item)), "utf-8"))
         clipboard.SetClipboardText(str(item))
     clipboard.CloseClipboard()
 
