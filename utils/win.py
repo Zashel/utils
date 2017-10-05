@@ -38,6 +38,7 @@ alingment ->
 """
 
 
+
 def coordinates(column, row=None):
     final = str()
     if row is not None:
