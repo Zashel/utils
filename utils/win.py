@@ -1,6 +1,7 @@
 import datetime
 import os
 import win32clipboard as clipboard
+from collections import OrderedDict
 
 SYLK_TEMPLATE = "ID;P\r\nP;PGeneral\r\n{}\r\nE"
 FORMAT_RC_TEMPLATE = "F;P{format};{rc}{identifier}"
@@ -86,7 +87,8 @@ def copy(item):
             final = list()
             if headers == list():
                 headers.extend(list(item.keys()))
-                headers.sort()
+                if not isinstance(item, OrderedDict):
+                    headers.sort()
                 final.append("\t".join(headers))
             final.append("\t".join([str(item[head]) for head in headers]))
             return "\r\n".join(final)
@@ -100,7 +102,8 @@ def copy(item):
                     row_index += 1
                 elif isinstance(row, dict):
                     h = list(row.keys())
-                    h.sort()
+                    if not isinstance(row, OrderedDict):
+                        h.sort()
                     if headers == list() or h != headers:
                         go_headers = True
                     else:
