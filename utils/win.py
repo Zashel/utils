@@ -38,8 +38,6 @@ alingment ->
     X: fill
 """
 
-
-
 def coordinates(column, row=None):
     final = str()
     if row is not None:
@@ -65,12 +63,14 @@ def search_win_drive(path):
 #For compatibilities with other modules and stuff of my own:
 buscar_unidad = search_win_drive
 
+
 def format_sylk(data):
     if isinstance(data, datetime.datetime):
         data = data.strftime("%d/%m/%Y %H:%M:%S")
     if isinstance(data, str):
-        data = "\"" + data + "\""
+        data = "\"" + str(data) + "\""
     return str(data)
+
 
 def copy(item):
     """
@@ -121,7 +121,10 @@ def copy(item):
                     row_index += 1
             headers.clear()
             return "\r\n".join(final)
-        clipboard.SetClipboardData(clipboard.CF_SYLK, bytearray(SYLK_TEMPLATE.format(set_sylk(item)), "utf-8"))
+        if hasattr(item, "__sylk__"):
+            clipboard.SetClipboardData(clipboard.CF_SYLK, item.__sylk__())
+        else:
+            clipboard.SetClipboardData(clipboard.CF_SYLK, bytearray(SYLK_TEMPLATE.format(set_sylk(item)), "utf-8"))
         clipboard.SetClipboardText("\r\n".join([any([isinstance(i, t) for t in (list, tuple)]) and
                                                 "\t".join([str(a) for a in i]) or
                                                 isinstance(i, dict) and set_headers(i) or
