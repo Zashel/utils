@@ -3,6 +3,8 @@ import os
 import win32clipboard as clipboard
 from collections import OrderedDict
 
+CF_XMLFORMAT = 49632
+
 SYLK_TEMPLATE = "ID;P\r\nP;PGeneral\r\n{}\r\nE"
 FORMAT_RC_TEMPLATE = "F;P{format};{rc}{identifier}"
 """
@@ -93,6 +95,9 @@ def copy(item):
             final.append("\t".join([str(item[head]) for head in headers]))
             return "\r\n".join(final)
         def set_sylk(item):
+            if hasattr(item, "__sylk__"):
+                return item.__sylk__()
+            print("Generating sylk")
             final = list()
             row_index = 1
             for row in item:
@@ -121,10 +126,7 @@ def copy(item):
                     row_index += 1
             headers.clear()
             return "\r\n".join(final)
-        if hasattr(item, "__sylk__"):
-            clipboard.SetClipboardData(clipboard.CF_SYLK, item.__sylk__())
-        else:
-            clipboard.SetClipboardData(clipboard.CF_SYLK, bytearray(SYLK_TEMPLATE.format(set_sylk(item)), "utf-8"))
+        clipboard.SetClipboardData(clipboard.CF_SYLK, bytearray(SYLK_TEMPLATE.format(set_sylk(item)), "utf-8"))
         clipboard.SetClipboardText("\r\n".join([any([isinstance(i, t) for t in (list, tuple)]) and
                                                 "\t".join([str(a) for a in i]) or
                                                 isinstance(i, dict) and set_headers(i) or
