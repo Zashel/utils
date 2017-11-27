@@ -83,7 +83,7 @@ def copy(item):
     """
     clipboard.OpenClipboard()
     clipboard.EmptyClipboard()
-    if any([isinstance(item, typo) for typo in (list, tuple)]):
+    if isinstance(item, (list, tuple)):
         headers = list()
         def set_headers(item):
             final = list()
@@ -127,7 +127,7 @@ def copy(item):
             headers.clear()
             return "\r\n".join(final)
         clipboard.SetClipboardData(clipboard.CF_SYLK, bytearray(SYLK_TEMPLATE.format(set_sylk(item)), "utf-8"))
-        clipboard.SetClipboardText("\r\n".join([any([isinstance(i, t) for t in (list, tuple)]) and
+        clipboard.SetClipboardText("\r\n".join([isinstance(i, (list, tuple)) and
                                                 "\t".join([str(a) for a in i]) or
                                                 isinstance(i, dict) and set_headers(i) or
                                                 str(i) for i in item]))
